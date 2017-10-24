@@ -1,10 +1,10 @@
 module Dfinity.NetworkMonitor.Client (connect, send, Client) where
 
-import Data.Binary
-import Data.ByteString.Lazy
 import Control.Concurrent (forkIO)
 import Control.Concurrent.BoundedChan
 import Control.Monad
+import Data.Binary
+import Data.ByteString.Lazy
 import Network
 
 import Dfinity.NetworkMonitor.Types

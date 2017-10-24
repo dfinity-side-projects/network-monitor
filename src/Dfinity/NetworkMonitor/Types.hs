@@ -1,13 +1,13 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Dfinity.NetworkMonitor.Types (Event, Metric) where
+module Dfinity.NetworkMonitor.Types where
 
-import qualified Data.Map as M
-import Data.Map (Map)
 import Data.Binary (Binary)
 import GHC.Generics (Generic)
 
+-- Timestamp and Duration are both in milliseconds
 type Timestamp = Int
+type Duration = Int
 type Height = Int
 type Node = Int
 type Size = Int
@@ -16,24 +16,13 @@ type Percentage = Int
 
 data Event =
   NewRound Node Timestamp Height |
-  SendBlock Node Timestamp Height Size |
-  RecvBlock Node Timestamp Height 
+  SendBlock Node Timestamp Height Rank Size |
+  RecvBlock Node Timestamp Height Rank
   deriving (Generic) 
 
 instance Binary Event
 
-data Metric =
-  BlockSentTime (Map Height (Map Rank Timestamp)) |
-  BlockPropagation (Map Height (Map Rank (Map Percentage Timestamp))) 
-
-instance Show Metric where
-  show (BlockSentTime m) = undefined
-  show (BlockPropagation m) = undefined
-
-update :: Event -> Metric -> Metric 
-update (SendBlock node ts height sz) (BlockSentTime m) = undefined
-update (RecvBlock node ts height) (BlockPropagation m) = undefined
-update _ e = e
-
-applyEvent :: Event -> [Metric] -> [Metric] 
-applyEvent e = map (update e)
+data Metric = Metric {
+  _display :: String,
+  _update :: Event -> Metric
+}

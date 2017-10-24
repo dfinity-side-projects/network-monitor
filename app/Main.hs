@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import Dfinity.NetworkMonitor.Server
 
 main :: IO ()
-main = someFunc
+main = mainLoop
