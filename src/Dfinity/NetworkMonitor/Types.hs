@@ -4,6 +4,7 @@ module Dfinity.NetworkMonitor.Types where
 
 import Data.Binary (Binary)
 import GHC.Generics (Generic)
+import Data.List (foldl')
 
 -- Timestamp and Duration are both in milliseconds
 type Timestamp = Int
@@ -26,3 +27,9 @@ data Metric = Metric {
   _display :: String,
   _update :: Event -> Metric
 }
+
+instance Show Metric where 
+  show = _display
+
+updateBatch :: [Event] -> Metric -> Metric
+updateBatch = flip $ foldl' _update

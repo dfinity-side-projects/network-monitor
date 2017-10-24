@@ -24,7 +24,11 @@ library
                      , BoundedChan
                      , bytestring
                      , containers
+                     , lucid
                      , network
+                     , scotty
+                     , text
+                     , transformers
   default-language:    Haskell2010
 
 executable network-monitor-server
