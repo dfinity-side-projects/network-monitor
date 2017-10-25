@@ -1,7 +1,7 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE OverloadedStrings    #-}
 
-module Dfinity.NetworkMonitor.Server (mainLoop) where
+module Dfinity.NetworkMonitor.Server (appPort, mainLoop) where
 
 import           Control.Concurrent
 import           Control.Monad

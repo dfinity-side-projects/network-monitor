@@ -23,11 +23,12 @@ data Event =
 
 instance Binary Event
 
-data Metric = Metric {
-  _display :: String,
-  _update  :: Event -> Metric,
-  _query   :: [String] -> Maybe String
-}
+data Metric = Metric
+  { _name    :: String
+  , _display :: String
+  , _update  :: Event -> Metric
+  , _query   :: [String] -> Maybe String
+  }
 
 instance Show Metric where
   show = _display

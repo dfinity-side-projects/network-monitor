@@ -5,9 +5,9 @@ module Dfinity.NetworkMonitor.Metrics
 
 import           Data.Map                     (Map)
 import qualified Data.Map                     as M
+import           Text.Read
 
 import           Dfinity.NetworkMonitor.Types
-import           Text.Read
 
 -- TODO: make this configurable
 clusterSize :: Int
@@ -38,8 +38,10 @@ newBlockSentTime :: Metric
 newBlockSentTime = blockSentTime M.empty
 
 blockSentTime :: Map Height (Map Rank Timestamp) -> Metric
-blockSentTime state = Metric display update query
+blockSentTime state = Metric name display update query
   where
+    name = "Sent Block"
+
     display = show state
 
     update (SendBlock _ ts height rank _) =
@@ -63,8 +65,10 @@ newBlockPropagation = blockPropagation $ Right M.empty
 -- block is sent, and the second element is the list of times when the
 -- block is received at different nodes.
 blockPropagation :: Either (Map Percentage Duration) (Map Height (Map Rank (Maybe Timestamp, [Timestamp]))) -> Metric
-blockPropagation s@(Right state) = Metric display update query
+blockPropagation s@(Right state) = Metric name display update query
   where
+    name = "Block Propagation" 
+
     display = "still aggregating events..."
 
     update (SendBlock _ ts height rank _) = blockPropagation . Right $
