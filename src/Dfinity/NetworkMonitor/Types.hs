@@ -2,9 +2,9 @@
 
 module Dfinity.NetworkMonitor.Types where
 
-import Data.Binary (Binary)
-import GHC.Generics (Generic)
-import Data.List (foldl')
+import           Data.Binary  (Binary)
+import           Data.List    (foldl')
+import           GHC.Generics (Generic)
 
 -- Timestamp and Duration are both in milliseconds
 type Timestamp = Int
@@ -19,16 +19,17 @@ data Event =
   NewRound Node Timestamp Height |
   SendBlock Node Timestamp Height Rank Size |
   RecvBlock Node Timestamp Height Rank
-  deriving (Generic) 
+  deriving (Generic)
 
 instance Binary Event
 
 data Metric = Metric {
   _display :: String,
-  _update :: Event -> Metric
+  _update  :: Event -> Metric,
+  _query   :: [String] -> Maybe String
 }
 
-instance Show Metric where 
+instance Show Metric where
   show = _display
 
 updateBatch :: [Event] -> Metric -> Metric
