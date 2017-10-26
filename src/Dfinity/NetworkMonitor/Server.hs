@@ -11,6 +11,7 @@ import qualified Data.ByteString                as BS
 import           Data.ByteString.Lazy           (fromStrict)
 import           Lucid
 import           Network
+import           Network.Wai.Parse
 import           System.IO                      (Handle)
 import           Web.Scotty
 
@@ -32,12 +33,17 @@ mainLoop = withSocketsDo $ do
   void $ forkIO $ forever $ process ch metrics
 
   -- Launch web server
-  void $ forkIO $ scotty webPort $
+  void $ forkIO $ scotty webPort $ do
     get "/" $ do
       let showM = fmap (toHtml . show) . readMVar
       ps <- liftIO . forM metrics $ (fmap p_ . showM)
-
       html . renderText . mconcat $ ps
+
+    post "/" $ do
+      [(_, fileInfo)] <- files
+      let batch = decode $ fileContent fileInfo
+      pure $ sequence_ . fmap (\mvar -> modifyMVar_ mvar (return . updateBatch batch)) $ metrics
+      finish
 
   -- Listen for connections
   sock <- listenOn appPort
