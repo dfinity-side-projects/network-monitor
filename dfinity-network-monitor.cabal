@@ -23,16 +23,10 @@ library
                      , aeson 
                      , binary
                      , BoundedChan
-                     , bytestring
                      , containers
                      , lens
                      , lucid
-                     , network
                      , scotty
-                     , split
-                     , text
-                     , transformers
-                     , wai-extra
                      , wreq
   default-language:    Haskell2010
 
