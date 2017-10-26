@@ -2,6 +2,7 @@
 
 module Dfinity.NetworkMonitor.Types where
 
+import           Data.Aeson
 import           Data.Binary  (Binary)
 import           Data.List    (foldl')
 import           GHC.Generics (Generic)
@@ -19,9 +20,12 @@ data Event =
   NewRound Node Timestamp Height |
   SendBlock Node Timestamp Height Rank |
   RecvBlock Node Timestamp Height Rank
-  deriving (Generic)
+  deriving (Show, Generic)
 
 instance Binary Event
+
+instance ToJSON Event
+instance FromJSON Event
 
 data Metric = Metric
   { _name    :: String

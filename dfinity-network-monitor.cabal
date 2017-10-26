@@ -20,10 +20,12 @@ library
                      , Dfinity.NetworkMonitor.Server
                      , Dfinity.NetworkMonitor.Metrics
   build-depends:       base >= 4.7 && < 5
+                     , aeson 
                      , binary
                      , BoundedChan
                      , bytestring
                      , containers
+                     , lens
                      , lucid
                      , network
                      , scotty
@@ -31,13 +33,14 @@ library
                      , text
                      , transformers
                      , wai-extra
+                     , wreq
   default-language:    Haskell2010
 
 
 executable network-monitor-server
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:       base
                      , dfinity-network-monitor
   default-language:    Haskell2010
@@ -51,7 +54,7 @@ test-suite network-monitor-test
                      , dfinity-network-monitor
                      , tasty
                      , tasty-hunit
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall
   default-language:    Haskell2010
 
 source-repository head
