@@ -21,7 +21,7 @@ appPort :: PortID
 appPort = PortNumber 3456
 
 webPort :: Int
-webPort = 3000
+webPort = 3455
 
 mainLoop :: IO ()
 mainLoop = withSocketsDo $ do

@@ -8,7 +8,6 @@ import           Control.Monad
 import           Data.Binary
 import           Data.ByteString.Lazy           (hPut)
 import           Data.List.Split                (splitOn)
-import           Data.Maybe
 import           Network
 
 import           Dfinity.NetworkMonitor.Types
@@ -51,29 +50,37 @@ connect addr port = withSocketsDo $ do
 clientLoop :: BoundedChan Event -> HostName -> PortID -> IO ()
 clientLoop ch addr port = handle onEx $ do
   -- establish connection
+  putStrLn "connecting to socket"
   handle <- connectTo addr port
 
   -- send events in batches
-  void $ forkIO $ forever $ do
+  forever $ do
     -- Send a batch every batchDelay time
     threadDelay batchDelay
+    putStrLn "preparing a batch"
 
     -- Read up to batchSize events
     batch <- catMaybes <$> replicateM batchSize (tryReadChan ch)
 
-    -- Send the batch
-    hPut handle $ encode batch
+    -- Send the batch if it's not empty
+    unless (null batch) $ do
+      putStrLn "sending a batch"
+      hPut handle $ encode batch
 
   where
-    onEx e = do
-      pure (e :: SomeException)
+    -- Unlike the official catMaybes, our catMaybes terminates as soon
+    -- as it encounters a Nothing.
+    catMaybes [] = []
+    catMaybes (Nothing:ms) = []
+    catMaybes (Just x:ms) = x : catMaybes ms
+
+    onEx e = let _ = (e :: SomeException) in
       -- TODO: log the exception
       -- TODO: exponential backoff?
       -- We want to backoff a little bit so that, for instance, if the
       -- monitoring server is down, we don't want to be trying to connect
       -- with it in a busy loop.
       threadDelay backoffDelay
-      clientLoop ch addr port
 
-send :: Event -> Client -> IO ()
-send ev (Client ch) = void $ tryWriteChan ch ev
+send :: Client -> Event -> IO ()
+send (Client ch) ev = void $ tryWriteChan ch ev

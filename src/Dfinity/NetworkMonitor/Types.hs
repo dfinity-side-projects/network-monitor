@@ -17,7 +17,7 @@ type Percentage = Int
 
 data Event =
   NewRound Node Timestamp Height |
-  SendBlock Node Timestamp Height Rank Size |
+  SendBlock Node Timestamp Height Rank |
   RecvBlock Node Timestamp Height Rank
   deriving (Generic)
 

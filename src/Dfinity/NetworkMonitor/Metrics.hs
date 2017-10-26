@@ -44,7 +44,7 @@ blockSentTime state = Metric name display update query
 
     display = show state
 
-    update (SendBlock _ ts height rank _) =
+    update (SendBlock _ ts height rank) =
       blockSentTime $ insertMap2 height rank ts state
     update _ = blockSentTime state
 
@@ -71,7 +71,7 @@ blockPropagation s@(Right state) = Metric name display update query
 
     display = "still aggregating events..."
 
-    update (SendBlock _ ts height rank _) = blockPropagation . Right $
+    update (SendBlock _ ts height rank) = blockPropagation . Right $
       insertWithMap2 f height rank (Just ts, []) state
       where
         f (_, recv) = (Just ts, recv)
