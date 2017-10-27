@@ -40,7 +40,7 @@ newBlockSentTime = blockSentTime M.empty
 blockSentTime :: Map Height (Map Rank Timestamp) -> Metric
 blockSentTime state = Metric name display update query
   where
-    name = "Sent Block"
+    name = "block-sent-time"
 
     display = show state
 
@@ -67,7 +67,7 @@ newBlockPropagation = blockPropagation $ Right M.empty
 blockPropagation :: Either (Map Percentage Duration) (Map Height (Map Rank (Maybe Timestamp, [Timestamp]))) -> Metric
 blockPropagation s@(Right state) = Metric name display update query
   where
-    name = "Block Propagation" 
+    name = "block-propagation"
 
     display = "still aggregating events..."
 
