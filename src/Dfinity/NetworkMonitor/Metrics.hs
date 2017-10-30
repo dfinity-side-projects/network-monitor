@@ -96,5 +96,24 @@ blockPropagation s@(Right state) = Metric name display update query
 
 blockPropagation (Left _) = undefined
 
+newAvgBlockLatency :: Metric
+newAvgBlockLatency = avgBlockLatency M.empty
+
+avgBlockLatency :: Map Height [Int] -> Metric
+avgBlockLatency state = Metric name display update query
+  where
+    avg :: [Int] -> Double
+    avg xs = realToFrac (sum xs) / realToFrac (length xs)
+
+    name = "avg-block-latency"
+    display = show $ M.map avg state 
+
+    update (FinishRound _ height duration) = avgBlockLatency $
+      M.adjust ((:) duration) height state
+    update _ = avgBlockLatency state 
+
+    query [height] = show . avg <$> M.lookup (read height) state
+    query _ = Nothing
+
 allMetrics :: [Metric]
-allMetrics = [newBlockSentTime, newBlockPropagation]
+allMetrics = [newBlockSentTime, newBlockPropagation, newAvgBlockLatency]
