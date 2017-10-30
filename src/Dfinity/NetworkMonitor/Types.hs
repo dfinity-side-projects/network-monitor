@@ -16,10 +16,12 @@ type Size = Int
 type Rank = Int
 type Percentage = Int
 
-data Event =
-  NewRound Node Timestamp Height |
-  SendBlock Node Timestamp Height Rank |
-  RecvBlock Node Timestamp Height Rank
+data Event
+  = NewRound Node Timestamp Height
+  | SendBlock Node Timestamp Height Rank
+  | RecvBlock Node Timestamp Height Rank
+  | FinishRound Node Height Duration
+
   deriving (Show, Generic)
 
 instance Binary Event

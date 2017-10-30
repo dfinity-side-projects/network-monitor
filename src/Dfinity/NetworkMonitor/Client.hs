@@ -54,8 +54,8 @@ clientLoop addr ch = handle onEx $ forever $ do
   -- Send the batch if it's not empty
   unless (null batch) $ do
     r <- post (addScheme addr) $ toJSON batch
-    print r
-    print (r ^. responseBody)
+    when (r ^. responseStatus . statusCode /= 200) $
+      putStrLn $ "error posting metrics: " ++ show r
 
   where
     -- Unlike the official catMaybes, our catMaybes terminates as soon
