@@ -1,11 +1,12 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE GADTs         #-}
 
 module Dfinity.NetworkMonitor.Types where
 
 import           Data.Aeson
 import           Data.Binary  (Binary)
-import           Data.List    (foldl')
 import           GHC.Generics (Generic)
+import           Web.Scotty
 
 -- Timestamp and Duration are both in milliseconds
 type Timestamp = Int
@@ -30,14 +31,7 @@ instance ToJSON Event
 instance FromJSON Event
 
 data Metric = Metric
-  { _name    :: String
-  , _display :: String
-  , _update  :: Event -> Metric
-  , _query   :: [String] -> Maybe String
+  { mName    :: String
+  , mUpdate  :: [Event] -> IO ()
+  , mHandler :: ActionM ()
   }
-
-instance Show Metric where
-  show = _display
-
-updateBatch :: [Event] -> Metric -> Metric
-updateBatch = flip $ foldl' _update

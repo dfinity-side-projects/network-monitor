@@ -1,11 +1,9 @@
 module Dfinity.NetworkMonitor.Metrics
-  ( allMetrics
-  , newBlockSentTime
-  , newBlockPropagation) where
+  (allMetrics) where
 
+import           Control.Concurrent.MVar
 import           Data.Map                     (Map)
 import qualified Data.Map                     as M
-import           Text.Read
 
 import           Dfinity.NetworkMonitor.Types
 
@@ -32,86 +30,13 @@ lookupMap2 a b m = M.lookup a m >>= \m' -> M.lookup b m'
 
 -- Metrics
 
--- BlockSentTime records the time that each block is sent, indexed by
--- their height and rank.
-newBlockSentTime :: Metric
-newBlockSentTime = blockSentTime M.empty
+newAvgBlockLatency :: IO Metric
+newAvgBlockLatency = newMVar M.empty >>= \state -> let
+  name = undefined
+  update = undefined
+  handler = undefined
+  in pure $ Metric name update handler
 
-blockSentTime :: Map Height (Map Rank Timestamp) -> Metric
-blockSentTime state = Metric name display update query where
-  name = "block-sent-time"
 
-  display = show state
-
-  update (SendBlock _ ts height rank) =
-    blockSentTime $ insertMap2 height rank ts state
-  update _ = blockSentTime state
-
-  query [height, rank] = do
-    h <- readMaybe height
-    r <- readMaybe rank
-    res <- lookupMap2 h r state
-    return $ show res
-  query _ = Nothing
-
--- BlockPropagation records the time it took for each block to reach
--- each node in the network, and displays the time it took for each
--- block to reach certain percentages of the network.
-newBlockPropagation :: Metric
-newBlockPropagation = blockPropagation $ Right M.empty
-
--- In the deepest level, the first element of the tuple is the time the
--- block is sent, and the second element is the list of times when the
--- block is received at different nodes.
-blockPropagation :: Either (Map Percentage Duration) (Map Height (Map Rank (Maybe Timestamp, [Timestamp]))) -> Metric
-blockPropagation s@(Right state) = Metric name display update query where
-  name = "block-propagation"
-
-  display = "still aggregating events..."
-
-  update (SendBlock _ ts height rank) = blockPropagation . Right $
-    insertWithMap2 f height rank (Just ts, []) state
-    where
-      f (_, recv) = (Just ts, recv)
-
-  update (RecvBlock _ ts height rank) = blockPropagation $
-    let
-      postState = insertWithMap2 f height rank (Nothing, [ts]) state
-      -- We have to be able to find the value since we just inserted
-      -- something.
-      Just (sent, recv) = lookupMap2 height rank postState in
-      if length recv == clusterSize then
-        Left $ compute (sent, recv)
-      else
-        Right postState
-    where
-      f (sent, recv) = (sent, ts:recv)
-      compute = undefined
-
-  update _ = blockPropagation s
-
-  query = undefined
-
-blockPropagation (Left _) = undefined
-
-newAvgBlockLatency :: Metric
-newAvgBlockLatency = avgBlockLatency M.empty
-
-avgBlockLatency :: Map Height [Int] -> Metric
-avgBlockLatency state = Metric name display update query where
-  avg :: [Int] -> Double
-  avg xs = realToFrac (sum xs) / realToFrac (length xs)
-
-  name = "avg-block-latency"
-
-  display = show $ M.map avg state
-
-  update (FinishRound _ height duration) = avgBlockLatency $
-    M.insertWith (++) height [duration] state
-  update _ = avgBlockLatency state
-
-  query [height] = show . avg <$> M.lookup (read height) state
-  query _        = Nothing
-
-allMetrics :: [Metric]
-allMetrics = [newBlockSentTime, newBlockPropagation, newAvgBlockLatency]
+allMetrics :: IO [Metric]
+allMetrics = sequence [newAvgBlockLatency]
