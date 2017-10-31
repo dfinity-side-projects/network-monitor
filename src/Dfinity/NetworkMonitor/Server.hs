@@ -26,7 +26,7 @@ mainLoop = allMetrics >>= \metrics -> scotty port $ do
     batch <- jsonData
     liftIO $ forM_ metrics $ \m -> mUpdate m batch
 
-  forM_ metrics $ \m -> get (fromString $ mName m) (mHandler m)
+  forM_ metrics $ \m -> get (fromString $ "/" ++ mName m) (mHandler m)
 
 -- console :: MonadIO m => String -> m ()
 -- console s = liftIO $ putStrLn s
