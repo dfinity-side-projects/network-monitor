@@ -12,7 +12,6 @@ var browserify = require('browserify-middleware')
 var app = express()
 
 // browserify client-side JS files
-console.log(__dirname)
 app.use('/javascripts', browserify(__dirname + '/client'))
 
 // proxy API server

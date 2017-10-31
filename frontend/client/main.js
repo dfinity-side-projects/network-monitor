@@ -1,6 +1,7 @@
+const $ = require('jquery')
 const Chart = require('chart.js');
 
-const ctx = "mainChart"
+const ctx = 'mainChart'
 
 const chart = new Chart(ctx, {
   type: 'bar',
@@ -24,17 +25,18 @@ const chart = new Chart(ctx, {
 })
 
 const params = new URLSearchParams(window.location.search)
-const last = params.get('last')
+const latest = params.get('latest')
 
 setInterval(function() {
-  $.get('/api/avg-block-latency?last=' + last, function(resp) {
+  $.get('/api/avg-block-latency?latest=' + latest, function(resp) {
     const labels = []
     const data = []
     resp.forEach(function(elem) {
-      labels.push(elem.height)
-      data.push(elem.latency)
+      labels.push(elem[0])
+      data.push(elem[1])
     })
     chart.data.labels = labels
     chart.data.datasets[0].data = data
+    chart.update()
   })
 }, 5000)
