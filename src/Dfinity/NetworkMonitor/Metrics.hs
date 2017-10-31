@@ -5,15 +5,21 @@ module Dfinity.NetworkMonitor.Metrics
 
 import           Control.Concurrent.MVar
 import           Control.Monad.IO.Class
+import Data.List (sort)
+import           Data.Map                     (Map)
 import qualified Data.Map                     as M
 import           Web.Scotty
 
 import           Dfinity.NetworkMonitor.Types
 
+-- TODO: make this configurable
+-- clusterSize :: Double
+-- clusterSize = 4
+
 -- Metrics
 
 avgBlockLatency :: IO Metric
-avgBlockLatency = newMVar M.empty >>= \state -> let
+avgBlockLatency = newMVar (M.empty :: Map Height (Int, Int)) >>= \state -> let
   name = "avg-block-latency"
 
   update batch = modifyMVar_ state $ \s -> pure $ foldr _update s batch
@@ -36,5 +42,38 @@ avgBlockLatency = newMVar M.empty >>= \state -> let
   in pure $ Metric name update handler
 
 
+blockPropagation :: IO Metric
+blockPropagation = newMVar (M.empty :: Map (Height, Rank) (Maybe Timestamp, [Timestamp])) >>= \state -> let
+  name = "block-propagation"
+
+  update batch = modifyMVar_ state $ \s -> pure $ foldr _update s batch
+
+  _update (SendBlock _ ts height rank) s =
+    case M.lookup (height, rank) s of
+      Nothing        -> M.insert (height, rank) (Just ts, []) s
+      Just (_, recv) -> M.insert (height, rank) (Just ts, recv) s
+
+  _update (RecvBlock _ ts height rank) s =
+    case M.lookup (height, rank) s of
+      Nothing           -> M.insert (height, rank) (Nothing, [ts]) s
+      Just (send, recv) -> M.insert (height, rank) (send, ts:recv) s
+
+  _update _ s = s
+
+  aggregate :: Maybe (Maybe Timestamp, [Timestamp]) -> [Duration]
+  aggregate (Just (Just send, recv')) = let
+    recv = sort recv' in
+    map (\r -> r - send) recv
+  aggregate _ = []
+
+  handler = do
+    height <- param "height"
+    rank <- param "rank" `rescue` (\_ -> pure 0)
+    res <- liftIO (aggregate . M.lookup (height, rank) <$> readMVar state)
+    json res
+
+  in pure $ Metric name update handler
+
+
 allMetrics :: IO [Metric]
-allMetrics = sequence [avgBlockLatency]
+allMetrics = sequence [avgBlockLatency, blockPropagation]
