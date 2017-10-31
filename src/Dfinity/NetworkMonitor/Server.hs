@@ -45,15 +45,6 @@ mainLoop = do
       html . renderText . mconcat $ ps
 
     post "/" $ do
-      -- content <- body
-      -- console "Got a post!"
-      -- console $ show content
-      -- let batch = decode content
-      -- console $ "Batch: " ++ show batch
-      -- console "Updating mvars!"
-      -- liftIO $ sequence_ . fmap (\mvar -> modifyMVar_ mvar (return . updateBatch batch)) $ metrics
-      -- console "I'm done"
-      -- return ()
       batch <- jsonData
       liftIO $ sequence_ . fmap (\mvar -> modifyMVar_ mvar (return . updateBatch batch)) $ metrics
       return ()
