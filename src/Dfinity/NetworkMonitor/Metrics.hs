@@ -18,11 +18,13 @@ avgBlockLatency = newMVar M.empty >>= \state -> let
 
   update batch = modifyMVar_ state $ \s -> pure $ foldr _update s batch
 
+  merge (a1, b1) (a2, b2) = (a1 + a2, b1 + b2)
+
   _update (FinishRound _ height duration) =
-    M.insertWith (\(n, total) _ -> (n + 1, total + duration)) height (1, duration)
+    M.insertWith merge height (1, duration)
   _update _ = id
 
-  aggregate = M.toDescList . M.map (\(n, total) -> (realToFrac total / realToFrac n) :: Double)
+  aggregate = M.toDescList . M.map (\(n, total) -> (realToFrac (total :: Int) / realToFrac (n :: Int)) :: Double)
 
   handler = do
     res <- liftIO (aggregate <$> readMVar state)
