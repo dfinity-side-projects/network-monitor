@@ -1,6 +1,7 @@
 extends layout
 
 block content
-  canvas(id="mainChart", width="400", height="400")
+  div(style="position: relative; height: 80vh")
+    canvas(id="mainChart")
   script(src="/javascripts/chart.js")
   script(src="/javascripts/main.js")

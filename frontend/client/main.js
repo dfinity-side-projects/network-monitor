@@ -4,30 +4,45 @@ const Chart = require('chart.js');
 const ctx = 'mainChart'
 
 const chart = new Chart(ctx, {
-  type: 'bar',
+  type: 'line',
   data: {
-    labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+    labels: [],
     datasets: [{
-      label: 'Avg Block Latency',
-      data: [12, 19, 3, 5, 2, 3],
+      label: 'Average Block Latency',
+      data: [],
       borderWidth: 1
     }]
   },
   options: {
     scales: {
+      xAxes: [{
+        scaleLabel: {
+          display: true,
+          labelString: 'Height'
+        }
+      }],
       yAxes: [{
         ticks: {
           beginAtZero:true
+        },
+        scaleLabel: {
+          display: true,
+          labelString: 'Milliseconds'
         }
       }]
-    }
+    },
+    responsive: true,
+    maintainAspectRatio: false
   }
 })
 
 const params = new URLSearchParams(window.location.search)
-const latest = params.get('latest')
 
-setInterval(function() {
+const latest = params.get('latest') || 100
+const frequency = parseInt(params.get('frequency')) || 2
+const freeze = params.get('freeze') == 'true'
+
+function update() {
   $.get('/api/avg-block-latency?latest=' + latest, function(resp) {
     const labels = []
     const data = []
@@ -39,4 +54,10 @@ setInterval(function() {
     chart.data.datasets[0].data = data
     chart.update()
   })
-}, 5000)
+}
+
+update()
+
+if (!freeze) {
+  setInterval(update, frequency * 1000)
+}
