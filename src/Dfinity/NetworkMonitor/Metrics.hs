@@ -67,10 +67,21 @@ blockPropagation = newMVar (M.empty :: Map (Height, Rank) (Maybe Timestamp, [Tim
   aggregate _ = []
 
   handler = do
-    height <- param "height"
+    height <- param "height" `rescue` (\_ -> pure 0)
     rank <- param "rank" `rescue` (\_ -> pure 0)
-    res <- liftIO (aggregate . M.lookup (height, rank) <$> readMVar state)
-    json res
+
+    s <- liftIO $ readMVar state
+
+    -- If height is not provided, use the latest block - 100.
+    -- Minus 100 because the latest block may not have fully propagated yet. 
+    json $ if height == 0 then let
+      kvs = M.toDescList s
+      ((nowHeight, _), _) = head kvs
+      key = (if nowHeight < 100 then nowHeight else nowHeight - 100, rank)
+      in 
+      aggregate . M.lookup key $ s
+    else
+      aggregate . M.lookup (height, rank) $ s
 
   in pure $ Metric name update handler
 
