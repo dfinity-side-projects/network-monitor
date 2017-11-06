@@ -35,7 +35,7 @@ connect addr = do
 
   -- Launch a thread that establishes connections with the server
   -- and sends events.
-  void $ forkIO $ forever $ clientLoop addr ch
+  void $ forkIO $ clientLoop addr ch
 
   return $ Client ch
 
@@ -44,7 +44,7 @@ connect addr = do
 -- the server.  If any of these steps fails, it restarts with some
 -- backoff.
 clientLoop :: String -> BoundedChan Event -> IO ()
-clientLoop addr ch = handle onEx $ forever $ do
+clientLoop addr ch = forever $ handle onEx $ do
   -- Send a batch every batchDelay time
   threadDelay batchDelay
 
