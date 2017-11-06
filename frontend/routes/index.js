@@ -5,7 +5,8 @@ var router = express.Router();
 router.get('/', function(req, res, next) {
   res.render('index', { metrics: {
     'Average Block Latency': 'avg-block-latency',
-    'Block Propagation': 'block-propagation'
+    'Block Propagation': 'block-propagation',
+    'Block Propagation Span': 'block-propagation-span'
   } });
 });
 

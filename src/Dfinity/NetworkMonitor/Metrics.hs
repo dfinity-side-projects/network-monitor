@@ -6,8 +6,10 @@ module Dfinity.NetworkMonitor.Metrics
 import           Control.Concurrent.MVar
 import           Control.Monad.IO.Class
 import Data.List (sort)
+import           Data.Ix                     (range)
 import           Data.Map                     (Map)
 import qualified Data.Map                     as M
+import  Data.Maybe                   (catMaybes)
 import           Web.Scotty
 
 import           Dfinity.NetworkMonitor.Types
@@ -66,24 +68,40 @@ blockPropagation = newMVar (M.empty :: Map (Height, Rank) (Maybe Timestamp, [Tim
     map (\r -> r - send) recv
   aggregate _ = []
 
-  handler = do
-    height <- param "height" `rescue` (\_ -> pure 0)
-    rank <- param "rank" `rescue` (\_ -> pure 0)
+  numbersHandler s height rank =
+    aggregate . M.lookup (height, rank) $ s
 
+  percentageHandler s height rank sp =
+    catMaybes . flip map (range (height, height + sp)) $ \h ->
+      (calcPercentage $ M.lookup (h, rank) s) :: Maybe (Map Double Int)
+    where
+      calcPercentage Nothing = Nothing
+      calcPercentage (Just (Nothing, _)) = Nothing
+      calcPercentage (Just (Just send, recv')) = let
+        recv = map (\r -> r - send) $ sort recv'
+        n = realToFrac $ length recv
+        percentages = [0.25, 0.5, 0.75, 0.99] in
+        Just $ M.fromList $ map (\p -> (p, recv !! floor (n * p))) percentages
+
+  handler = do
     s <- liftIO $ readMVar state
 
-    -- If height is not provided, use the latest block - 100.
-    -- Minus 100 because the latest block may not have fully propagated yet. 
-    json $ if height == 0 then let
+    typ <- param "type" `rescue` (\_ -> pure ("numbers" :: String))
+    height <- param "height" `rescue` (\_ -> let
       kvs = M.toDescList s
-      ((nowHeight, _), _) = head kvs
-      key = (if nowHeight < 100 then nowHeight else nowHeight - 100, rank)
-      in 
-      aggregate . M.lookup key $ s
-    else
-      aggregate . M.lookup (height, rank) $ s
+      ((nowHeight, _), _) = head kvs in
+      if nowHeight < 100 then pure nowHeight
+                         else pure $ nowHeight - 100)
+    rank <- param "rank" `rescue` (\_ -> pure 0)
+    sp <- param "span" `rescue` (\_ -> pure 50)
+
+    case typ of
+      "numbers" -> json $ numbersHandler s height rank
+      "percentage" -> json $ percentageHandler s height rank sp
+      _ -> raise "unknown type"
 
   in pure $ Metric name update handler
+
 
 
 allMetrics :: IO [Metric]
