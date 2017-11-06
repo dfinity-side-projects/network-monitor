@@ -35,7 +35,7 @@ avgBlockLatency = newMVar (M.empty :: Map Height (Int, Int)) >>= \state -> let
   handler = do
     res <- liftIO (aggregate <$> readMVar state)
     latest <- param "latest" `rescue` (\_ -> pure 0)
-    json $ case latest of
+    json . reverse $ case latest of
       0 -> res
       l -> take l res
 
